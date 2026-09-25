@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hamburg Recycling Week</title>
+<meta name="description" content="Is it your recycling week in the Town of Hamburg, NY? Find your street and see your next pickup date, bulk weeks and holiday delays.">
+<meta name="theme-color" content="#1B3668" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#13151A" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Recycling">
+<meta property="og:title" content="Hamburg Recycling Week">
+<meta property="og:description" content="Find your street, see whether this is your week and when the next pickup is.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231B3668'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='%23fff' font-family='sans-serif' font-weight='bold'%3EA%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F3F2EE;
+  --card:#FFFFFF;
+  --ink:#191C22;
+  --ink-soft:#5C6270;
+  --ink-faint:#8A909C;
+  --rule:#D8D6D0;
+  --navy:#1B3668;
+  --a-strong:#C8414C;
+  --a-fill:#F3A9A2;
+  --b-strong:#3A4887;
+  --b-fill:#A3AACB;
+  --bulk:#E9BE2C;
+  --holiday:#6E8C4A;
+  --cell:#DCDAD5;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+:root:not([data-theme="light"]){
+  @media (prefers-color-scheme: dark){
+    --paper:#13151A;
+    --card:#1C1F27;
+    --ink:#ECEDF0;
+    --ink-soft:#A2A8B6;
+    --ink-faint:#767D8C;
+    --rule:#2C3039;
+    --navy:#8FA8D8;
+    --a-strong:#E8848C;
+    --a-fill:#7C3A41;
+    --b-strong:#9BA6DC;
+    --b-fill:#3A4372;
+    --cell:#2A2E37;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#13151A;
+  --card:#1C1F27;
+  --ink:#ECEDF0;
+  --ink-soft:#A2A8B6;
+  --ink-faint:#767D8C;
+  --rule:#2C3039;
+  --navy:#8FA8D8;
+  --a-strong:#E8848C;
+  --a-fill:#7C3A41;
+  --b-strong:#9BA6DC;
+  --b-fill:#3A4372;
+  --cell:#2A2E37;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0;min-height:100%;
+  background:var(--paper);color:var(--ink);
+  font-family:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  font-size:16px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+}
+.wrap{max-width:46rem;margin:0 auto;padding:1.5rem 1.15rem 3.5rem}
+@media(min-width:40rem){.wrap{padding:2.5rem 2rem 4rem}}
+
+/* masthead modelled on the printed month bars */
+.mast{display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap;
+  border-bottom:2px solid var(--navy);padding-bottom:.5rem;margin-bottom:1.6rem}
+.mast h1{margin:0;font-size:1.05rem;font-weight:800;letter-spacing:-.01em;color:var(--navy)}
+.mast span{font-size:.85rem;color:var(--ink-faint)}
+
+/* setup */
+.ask{font-size:1.5rem;font-weight:600;letter-spacing:-.02em;margin:0 0 .35rem}
+.ask-sub{margin:0 0 1.2rem;color:var(--ink-soft);font-size:.95rem;max-width:34rem}
+.field{position:relative}
+input[type=search]{
+  width:100%;font:inherit;font-size:1.05rem;padding:.8rem .9rem;
+  background:var(--card);color:var(--ink);
+  border:1.5px solid var(--rule);border-radius:.4rem;
+}
+input[type=search]:focus-visible{outline:2.5px solid var(--navy);outline-offset:1px;border-color:var(--navy)}
+.results{list-style:none;margin:.75rem 0 0;padding:0}
+.results li{border-bottom:1px solid var(--rule)}
+.pick{
+  display:flex;width:100%;gap:.75rem;align-items:baseline;justify-content:space-between;
+  background:none;border:0;font:inherit;color:inherit;text-align:left;
+  padding:.7rem .25rem;cursor:pointer;border-radius:.25rem;
+}
+.pick:hover{background:var(--card)}
+.pick:focus-visible{outline:2.5px solid var(--navy);outline-offset:-2px}
+.pick .name{font-weight:500}
+.pick .seg{display:block;font-size:.85rem;color:var(--ink-soft);font-weight:400}
+.pick .when{font-size:.85rem;color:var(--ink-soft);white-space:nowrap}
+.empty{color:var(--ink-soft);font-size:.95rem;padding:.8rem .25rem}
+
+/* verdict */
+.verdict{margin:0 0 1.75rem}
+.verdict .lede{
+  font-size:clamp(1.9rem,8vw,2.9rem);line-height:1.06;font-weight:800;
+  letter-spacing:-.035em;margin:0 0 .5rem;
+}
+.verdict .lede.no{color:var(--ink-faint)}
+.verdict .detail{margin:0;font-size:1.02rem;color:var(--ink-soft);max-width:34rem}
+.verdict .detail b{color:var(--ink);font-weight:600}
+.badge{
+  display:inline-block;font-size:.78rem;font-weight:600;
+  padding:.2rem .5rem;border-radius:.25rem;margin-right:.4rem;vertical-align:.1rem;
+}
+.badge.bulk{background:var(--bulk);color:#2A2306}
+.badge.shift{background:var(--holiday);color:#fff}
+
+/* street identity line */
+.who{
+  display:flex;flex-wrap:wrap;gap:.5rem .75rem;align-items:center;
+  padding:.7rem 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+  margin-bottom:1.75rem;font-size:.92rem;color:var(--ink-soft);
+}
+.who .street{font-weight:600;color:var(--ink)}
+.who button{
+  background:none;border:0;padding:.15rem .2rem;font:inherit;font-size:.9rem;
+  color:var(--navy);text-decoration:underline;cursor:pointer;border-radius:.2rem;margin-left:auto;
+}
+.who button:focus-visible{outline:2.5px solid var(--navy);outline-offset:1px}
+.swatch{display:inline-block;width:.7rem;height:.7rem;border-radius:.15rem;vertical-align:-.05rem;margin-right:.3rem}
+.swatch.a{background:var(--a-strong)}
+.swatch.b{background:var(--b-strong)}
+
+h2{font-size:.95rem;font-weight:600;color:var(--ink);margin:0 0 .6rem}
+section{margin-bottom:2rem}
+
+/* upcoming list */
+.dates{list-style:none;margin:0;padding:0}
+.dates li{
+  display:flex;gap:.9rem;align-items:baseline;
+  padding:.65rem 0;border-bottom:1px solid var(--rule);
+}
+.dates .dow{width:3.1rem;flex:none;font-weight:600}
+.dates .date{flex:1}
+.dates .tags{text-align:right;font-size:.8rem;color:var(--ink-soft)}
+.dates li:first-child .dow,.dates li:first-child .date{color:var(--ink)}
+.dates li:first-child{border-bottom:1.5px solid var(--ink)}
+
+/* A/B ribbon — echoes the printed calendar blocks */
+.ribbon{display:flex;gap:.25rem;overflow-x:auto;padding-bottom:.4rem;-webkit-overflow-scrolling:touch}
+.wk{flex:1 0 3.1rem;min-width:3.1rem;text-align:center}
+.wk .bar{
+  height:2.1rem;border-radius:.2rem;display:flex;align-items:center;justify-content:center;
+  font-size:.82rem;font-weight:600;
+}
+.wk.a .bar{background:var(--a-fill);color:var(--a-strong)}
+.wk.b .bar{background:var(--b-fill);color:var(--b-strong)}
+.wk.mine .bar{box-shadow:inset 0 0 0 2px currentColor}
+.wk .of{display:block;font-size:.72rem;color:var(--ink-faint);margin-top:.25rem;white-space:nowrap}
+.wk.now .of{color:var(--ink);font-weight:600}
+.ribbon-key{font-size:.82rem;color:var(--ink-soft);margin:.5rem 0 0}
+
+.actions{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 2rem}
+.act{
+  font:inherit;font-size:.92rem;font-weight:500;
+  padding:.55rem .85rem;border-radius:.35rem;cursor:pointer;
+  background:var(--card);color:var(--ink);border:1.5px solid var(--rule);
+}
+.act:hover{border-color:var(--navy);color:var(--navy)}
+.act:focus-visible{outline:2.5px solid var(--navy);outline-offset:1px}
+.act[data-done="1"]{border-color:var(--holiday);color:var(--holiday)}
+.note{font-size:.85rem;color:var(--ink-soft);margin:.1rem 0 0;flex-basis:100%}
+
+footer{border-top:1px solid var(--rule);padding-top:.9rem;font-size:.82rem;color:var(--ink-faint)}
+footer p{margin:0 0 .4rem}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="mast">
+    <h1>Hamburg Recycling Week</h1>
+    <span id="today"></span>
+  </div>
+
+  <!-- SETUP -->
+  <div id="setup">
+    <h2 class="ask">Which street are you on?</h2>
+    <p class="ask-sub">Start typing. Some roads are split into segments by cross street, the way the town's listing does it — pick the stretch you live on.</p>
+    <div class="field">
+      <input type="search" id="q" placeholder="e.g. Lakeview Rd" autocomplete="off" spellcheck="false"
+             aria-label="Search your street" aria-describedby="rhint">
+    </div>
+    <ul class="results" id="results"></ul>
+    <p class="empty hidden" id="rhint">516 streets from the town's A/B listing.</p>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main" class="hidden">
+    <div class="verdict">
+      <p class="lede" id="lede"></p>
+      <p class="detail" id="detail"></p>
+    </div>
+
+    <div class="who">
+      <span class="street" id="whoStreet"></span>
+      <span id="whoWeek"></span>
+      <button type="button" id="change">Change street</button>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="act" id="shareBtn">Copy link for a neighbor</button>
+      <button type="button" class="act" id="icsBtn">Add to my calendar</button>
+      <p class="note hidden" id="actNote"></p>
+    </div>
+
+    <section>
+      <h2>Next pickups</h2>
+      <ul class="dates" id="dates"></ul>
+    </section>
+
+    <section>
+      <h2>The next few weeks</h2>
+      <div class="ribbon" id="ribbon"></div>
+      <p class="ribbon-key" id="ribbonKey"></p>
+    </section>
+
+    <footer>
+      <p id="foot1"></p>
+      <p id="foot2"></p>
+      <p>Built from the Town of Hamburg street listing and the 2026 Modern collection calendar. Check with the town if something looks off.</p>
+    </footer>
+  </div>
+</div>
+
+<script>
+const DATA = {"A":{"Monday":["Abbott Rd (Lake Ave to Thurston Ave)","Allendale Pkwy","Alsace Pl","Alton Ct","Amber Ct","Ardmore Ct","Ashley Dr","Bethford Dr","Big Tree Rd (Burke Rd to Manor Ln)","Brompton Dr","Brompton Pkwy","Burke Pkwy","Carol Ct","City View Ave","Clearview Way","Connie Trl","Connors Way","Cox Dr","Daisy Ln","Dickens Rd","Dolphin Dr","Dorchester Pkwy","Dorothy Pl","Duane Ct","E Highland Pkwy","East Highland Pkwy","Emerling Dr","Eric Trl","Harmony Way","Horton Ave","Jacks Trl","Jody Ct","John Michael Way","Kathaleen St","Lake Ave","Lynn Dr","Lynwood Ave","Lyth Rd","Manor Ln","Marilyn Dr","Mckinley Pkwy (Willet Ave to Southwestern Blvd)","Milestrip Rd (South Park Ave to Abbott Rd)","Mosey Ln","Niles Ave","Olympic Ave","Parker Rd (Big Tree Rd to Harmony Way)","Richmond Ave","Ridge Way","Roseview Ave","Sheldon Rd","South Alfred Rd","South Lyth Rd","Stewart Rd","Terri Trl","Thurston Ave","Tim Tam Trl","Willett Rd","Wolf Rd"],"Tuesday":["Alexandra Court","Armor Dr","Armor Duells Rd","Arnold Ct","Ashler Ct","Beaubein Dr","Bernadette Dr","Best St","Boston State Rd","Brenner Rd","Brookside Dr","Camp Rd (Elmview to Ockler)","Carlton Dr","Carpenter Rd","Castle Ridge","Cherry Pl","Clark St","Colvin Ave","Copperfield Dr","Crestridge Dr","Crestwood Dr","Dorst Dr","East Eden Rd","East Main St","Edgewood Dr","Franklin St","Grandview Ave","High St","Holly Pl","Kast Pl","Keems Ln","Killarney Mnr","Kirschner Pkwy","Knab Dr","Legion Dr","Lewis Dr","Lilydale St","Maplewood Dr","Marie Dr","Marion Pl","Mckinley Pkwy (Sowles Rd to Boston State Rd)","Meadow Ln","Nancy Ct","Newton Rd","N Hampton Brk Dr","Oakland Pl","Oakridge Dr","Ockler Ave","Old East Eden Rd","Red Oak Ct","Ridgefield Terrace","Rush Creek Ct","Salisbury Pl","Scott St","Shadyridge Dr","Shamrock Ct","South Abbott Rd","Sunnyside Dr","Tasseff Terr","Taylor Rd","Vail Dr","Valley View Ave","Waterford Ln","Westview Ave","White Tail Ct","Willow Ridge Dr","Winding Woods Ln","Woodland Dr","Woodside Ave","Wright Pl"],"Wednesday":["Abbott Rd (Big Tree Rd to Armour Duells Rd)","Arrowwood Dr","Bayview Rd (Southpark to Abbott Rd)","Beetow Dr","Berkley Pl","Big Tree Rd (Bayview Rd to I-90)","Bradford St","Burlbrook Dr","Chatham Dr","College St","Columbia St","Cornell St","Dartmouth St","Delilah Ln","Estelle Dr","Gerber Pkwy","Harvard St","Hickory Rd","Hidden Hollow Rd","Mckinley Pkwy (Southwestern Blvd to Sowles Rd)","Middleham Park","Mistymeadow Ln","Parker Rd (Harmony Way to Bay View Rd)","Pittsburg St","Polly Ln","Princeton St","Regents Park","Rosetta Ave","Soda Pkwy","South Park Ave (Big Tree Rd to Sowles Rd)","Sowles Rd (Blair Ct to I-90)","Stockton Ln","Thornwood Ct","Tisbury Ln","Tomaka Dr","Towers Pl","Twilight Ln","Wildwood Dr","Wilson Dr","Yale Ave"],"Thursday":["Avery Dr","Beach Ave","Bell Dr","Camp Rd (Lakeshore Rd to Train Tracks)","Chapman Pkwy","Clifton Pkwy","Cloverbank Rd (Lakeshore Rd to Train Tracks)","Durham Rd","Exeter Terr","Ferndale Ave","Glendale Ave","Greenfield Ave","Hall Dr","Hawthorne Ave","Kelsey Dr","Kennison Pkwy","Lakeshore Rd (Big Tree Rd to Lakeview Rd)","Lakewood Dr","Lasalle Ave","Lyndale Dr","Milford Rd","Morgan Pkwy","Mt Vernon Blvd","Norton Dr","Oakwood Ave (Orchard Ave to Ferndale Ave)","Orchard Ave","Oxford Terr","Riverton Ave","Roanoke Dr","Rogers Rd (Lakeshore Rd to Morgan Pkwy)","Seabreeze Ave","Seaford Terr","Shenandoah Dr","Southcrest Ave","St Francis Dr","Staley Dr","Stratford Terr","Trenton Rd","Walbridge Dr","Warwick Terr","Waveland Ct","Willow Ln","Windsor Ter","Winsted Rd","Woodlawn Ave (Orchard Ave to Glendale Ave)"],"Friday":["Agassiz Dr","Amsdell Rd (Brundage St to Southwestern Blvd)","Briercliff Dr","Brundage Dr","Burbank Dr","Buttermilk Ln","Centerwood Ct","Christopher Blvd","Cloverbank Rd (Train Tracks to Woodway Crt)","Coachmans Ln","Country Club Ln","Coventry Grn","Devonshire Dr","Foxchase Rd","Green Meadow Ct","Hackberry Dr","Hobblebush Ln","Hunters Hollow Ln","Mayflower Ln","Pebble Beach Dr","Pincherry Way","Pinegrove Ct","Pleasant Ave (Heltz Rd to Lenora Dr)","Pond Brook Cir","Schultz Rd (Heltz Rd to I-90)","Shadbush Way","Shadow Ln","South Pl","Southwestern Blvd (Amsdell Rd to Lakeview Rd)","Sprucewood Ct","Sterling Rd","Stilwell Rd","Treefoil Ct","Trillium Ct","Tupelo Ln","Versailles Rd (Pleasant Ave to Center St)","West Pleasant Dr","White Oak Way","Winterberry Dr","Woodsfield Dr"]},"B":{"Monday":["Allen St","Bain Pkwy","Bayview Rd (Willowdale to Big Tree Rd)","Big Tree Rd (Lake Shore Rd to Bayview Rd)","Blair Ct","Bond St","Bristol Pkwy","Bristol Rd","Bryant St","Buffalo Ave","Caitlin Terr","Dean St","Delmar Ave","East Allen St","East Frontier Dr","Elmwood Ave","Fairview Pkwy","Fifth St","First St","Fourth St","Fuller Ave","Glenwood Ave","Grafton Ave","Greenfield Pkwy","Harrison Ave","Harwood Ave","Hawley Rd","Highview Pkwy","Hoover Rd","Hudson St","Iroquois Ave","James Ave","Jarvis St","Johnson St","Lake View Ave","Lakeshore Rd (2nd St to Bayview Rd)","Linwood Ave","Loring Ave","Marlowe Ave","Meadowbrook Pkwy","Mid Shore Dr","Milestrip Rd (Lakeshore Rd to Seneca Dr)","Mundy Ave","Nelson Ave","North Shore Dr","North St","Oakwood Ave (Southpark Ave to Glenwood Ave)","Park Ave (Milestrip Rd to Lakeshore Rd)","Powers Ave","Raymond Dr","Riggs St","Salem Dr","Salisbury Ave","Saxony Pl","Second St","Seventh St","Sixth St","South Park Ave (Milestrip Rd to Big Tree Rd)","South Shore Dr","State St","Third St","Victorian Dr","W Highland Pkwy","Wabash Ave","West Ave","White Ave","Willowdale Ave","Winslow Dr","Woodlawn Ave (Bayview Rd to Sumner Ave)"],"Tuesday":["Adams St","Alder Ct","Arthur Ct","Autumnway Ln","Azalea Ct","Bayview Rd (Big Tree Rd to Southpark Ave)","Beilman Ct","Bradley Ln","Brian Ct","Buckingham Ln","Chisholm Trl","Clarice Dr","Colonial Pl","Deacon St","Electric Ave","Ellsworth Ave","Essex Pl","Fairgrounds Rd","Garfield Ave","Glenwillow Dr","Grant Ave","Innesbrooke Ct","Jefferson Ave","Larkspur Ln","Lincoln Ave","Loran Ave","Maelou Dr","Margaret Ann Dr","Midway Ct","Monroe Ave","Norway Pl","Nottingham Ter","Ontario Ave","Park Ave (Ontario Ave to Electric Ave)","Quinby Dr","Richmond Dr","Richwood Dr","Robin Ln","Rushford Dr","Scranton Rd","Sharondale Dr","Sheva Ln","South Park Ave (Sowles Rd to Legion Dr)","Sowles Rd (Electric Ave to Rosetta Rd)","Sprague Ave","Springway Ln","Summerway Ln","Sunway Ln","Sussex Pl","Tudor Pl","Walker Pl","Washington Ave","Wayfare Ct","Winterway Ln","Wood Ave","Woodrich Ct"],"Wednesday":["Abel Rd","Amsdell Rd (Southwestern Blvd to Rodgers Rd)","Bender Ct","Breckenridge Rd","Briarwood Ct","Bridlewood Ln","Brookfield Ln","Camp Rd (Clayton to Southwestern)","Carlyes Ct","Cedar Valley Way","Cooper Ridge","Countryside Ln","Creekview Dr","Cross Creek Way","Cumberland Ln","Deerfield Rd","Dogwood Ln","Drayton Park","Fox Run Dr","Garden Path","Greenview Terr","Grover Pl","Heatherwood Dr","Howard Rd","Ironwood Dr","Kendrick Pl","Kings Ct","Kingswood Ln","Lancelot Ct","Logans Ln","Lower Ct","Nash Rd","Oregon Ave","Overlook Pt","Parkwood Cmn","Pineview Dr","Pleasant Ave (Amsdell Rd to Rogers Rd)","Queens Ct","Queens Ln","Rogers Rd (Bender Crt to Pleasant Ave)","Roundtree Rd","Somerset Ln","Southwestern Blvd (Howard Rd to Sowles Rd)","Sycamore Ln","Upper Ct","Van Peyma Rd","Wexford Ln","Woodhaven Cir","Woodway Ct","Wyndfield Ct"],"Thursday":["Ainslee Ln","Amsdell Rd (Lake Shore to Old Camp Rd)","Apollo Dr","Beachwood Dr","Birchwood Dr","Bird Ave","Cavalier Cir","Columbia Ave","Crescent Terr","Diana Ln","Dover Rd","East Ln","East Pkwy","Eastwood Ave","Eckhardt Rd","Elmhurst Rd","Fairway Ct","Ganymede Ln","Hakanaw Ave","Harbor Run Ln","Hazelwood Rd","Hewson Rd","Juno Dr","Lakecrest Dr","Lakeview Rd (Old Lakeshore Rd to Lakeshore Rd)","Lakeview Terr","Lakewood Ave","Marina Dr","Micaela Ct","Minerva Dr","North Dr","Oakley Pl","Old Lake Shore Rd (Court Dr to Eckhardt Rd)","Penhurst Pl","Pinehurst Ct","Pleasant Ave (Lakeshore Rd to Train Tracks)","Portside Dr","Roberts Rd","Rosewood Terr","Saunders Rd","Schoellkopf Rd","Shoreham Dr","South Bend Ln","Stewart Pkwy","Triangle Rd","Truscott Ter","Walden Dr","Wanakah Hts","West Ln","West Pkwy","Woodford Dr"],"Friday":["Appaloosa Way","Basswood Dr","Bonnie Ln","Burke Rd","Center Ln","Center St","East Pleasant Dr","Eckhardt Rd","Engel Dr","Evergreen Dr","Gowanda State Rd","Hampton Brook Dr","Hanley Dr","Heltz Rd","Hickox Rd","Lakeshore Rd (Lakeview Rd to South Creek Rd)","Lakeview Rd (Lakeshore Rd to Old Lakeview Rd)","Lombardy Ln","Mill Rd","North Creek Rd","Old Lake Shore Rd (Eckhardt Rd to North Creek Rd)","Old Lakeview Rd","Picture Lake Dr","Riverview Dr","Rosedale Ave","Schultz Rd (Lakeview Rd to I-90)","Smith Rd","South Creek Rd","South Hill Rd","Southwestern Blvd (Heltz Rd to North Creek Rd)","Staffehl Dr","Stainton Dr","Stevens Rd","Sundance Trl","Versailles Rd (Center St to North Creek Rd)","West Arnold Dr","Windover Dr"]}};
+
+/* ---------- date helpers ---------- */
+const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday"];
+const DOW  = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const MON  = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+// Anchor: the week beginning Sunday 2026-04-05 is printed as an A week.
+const ANCHOR = Date.UTC(2026, 3, 5) / 86400000;
+
+function mk(y,m,d){ return new Date(y, m, d); }
+function dayNum(d){ return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000; }
+function addDays(d,n){ return mk(d.getFullYear(), d.getMonth(), d.getDate()+n); }
+function weekStart(d){ return addDays(d, -d.getDay()); }
+function weekLetter(d){
+  const w = Math.floor((dayNum(weekStart(d)) - ANCHOR) / 7);
+  return ((w % 2) + 2) % 2 === 0 ? "A" : "B";
+}
+function sameDay(a,b){ return dayNum(a) === dayNum(b); }
+function fmt(d, withYear){
+  let s = DOW[d.getDay()].slice(0,3) + ", " + MON[d.getMonth()] + " " + d.getDate();
+  if (withYear) s += ", " + d.getFullYear();
+  return s;
+}
+
+/* Holidays observed by Modern: New Year's, Memorial, Independence, Labor,
+   Thanksgiving, Christmas. A Sunday holiday is observed Monday; a Saturday
+   holiday shifts nothing, matching the printed 2026 calendar (Jul 4). */
+function nthDow(y, m, dow, n){
+  let d = mk(y, m, 1);
+  while (d.getDay() !== dow) d = addDays(d, 1);
+  return addDays(d, (n-1)*7);
+}
+function lastDow(y, m, dow){
+  let d = mk(y, m+1, 0);
+  while (d.getDay() !== dow) d = addDays(d, -1);
+  return d;
+}
+function holidays(y){
+  const obs = d => d.getDay() === 0 ? addDays(d,1) : d;
+  return [
+    { d: obs(mk(y,0,1)),      name: "New Year's Day" },
+    { d: lastDow(y,4,1),      name: "Memorial Day" },
+    { d: obs(mk(y,6,4)),      name: "Independence Day" },
+    { d: nthDow(y,8,1,1),     name: "Labor Day" },
+    { d: nthDow(y,10,4,4),    name: "Thanksgiving" },
+    { d: obs(mk(y,11,25)),    name: "Christmas Day" },
+  ];
+}
+function holidayInWeek(ws){
+  const list = holidays(ws.getFullYear()).concat(holidays(ws.getFullYear()+1));
+  const end = addDays(ws, 6);
+  return list.find(h => dayNum(h.d) >= dayNum(ws) && dayNum(h.d) <= dayNum(end)) || null;
+}
+
+/* Bulk: every other month, second full collection week — which works out to
+   the second Monday of April, June, August, October and December. That rule
+   reproduces all five dates printed on the 2026 calendar. */
+function bulkMondays(y){
+  return [3,5,7,9,11].map(m => nthDow(y, m, 1, 2));
+}
+function isBulkWeek(ws){
+  return bulkMondays(ws.getFullYear()).some(m => sameDay(weekStart(m), ws));
+}
+
+/* One scheduled pickup for a given week */
+function pickup(ws, dayIdx){
+  const base = addDays(ws, dayIdx + 1);          // Mon = idx 0
+  const h = holidayInWeek(ws);
+  let date = base, shifted = null;
+  if (h && h.d.getDay() >= 1 && h.d.getDay() <= 5 && dayNum(h.d) <= dayNum(base)) {
+    date = addDays(base, 1);
+    shifted = h.name;
+  }
+  return { date, shifted, bulk: isBulkWeek(ws) };
+}
+
+function upcoming(letter, dayIdx, from, count){
+  const out = [];
+  let ws = weekStart(from);
+  for (let i = 0; out.length < count && i < 60; i++, ws = addDays(ws, 7)) {
+    if (weekLetter(ws) !== letter) continue;
+    const p = pickup(ws, dayIdx);
+    if (dayNum(p.date) < dayNum(from)) continue;
+    out.push(p);
+  }
+  return out;
+}
+
+/* ---------- street index ---------- */
+const ENTRIES = [];
+for (const wk of ["A","B"]) {
+  for (const day of DAYS) {
+    for (const full of DATA[wk][day]) {
+      const m = full.match(/^(.*?)\s*\((.*)\)\s*$/);
+      ENTRIES.push({
+        id: wk + "|" + day + "|" + full,
+        full, week: wk, day,
+        base: m ? m[1].trim() : full,
+        seg:  m ? m[2].trim() : ""
+      });
+    }
+  }
+}
+const norm = s => s.toLowerCase().replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
+
+function search(qRaw){
+  const q = norm(qRaw);
+  if (!q) return [];
+  const groups = new Map();
+  for (const e of ENTRIES) {
+    const nb = norm(e.base);
+    let rank = -1;
+    if (nb.startsWith(q)) rank = 0;
+    else if (nb.split(" ").some(w => w.startsWith(q))) rank = 1;
+    else if (nb.includes(q)) rank = 2;
+    else if (norm(e.full).includes(q)) rank = 3;
+    if (rank < 0) continue;
+    const key = nb;
+    if (!groups.has(key)) groups.set(key, { base: e.base, rank, items: [] });
+    const g = groups.get(key);
+    g.rank = Math.min(g.rank, rank);
+    g.items.push(e);
+  }
+  return [...groups.values()]
+    .sort((a,b) => a.rank - b.rank || a.base.localeCompare(b.base))
+    .slice(0, 14);
+}
+
+/* ---------- state ---------- */
+const KEY = "hamburg-recycling-street";
+let chosen = null;
+function save(full){ try { localStorage.setItem(KEY, full); } catch(e){} }
+function load(){ try { return localStorage.getItem(KEY); } catch(e){ return null; } }
+
+const $ = id => document.getElementById(id);
+
+/* ---------- setup view ---------- */
+function renderResults(){
+  const groups = search($("q").value);
+  const ul = $("results");
+  ul.innerHTML = "";
+  if (!$("q").value.trim()) { $("rhint").classList.remove("hidden"); return; }
+  $("rhint").classList.add("hidden");
+  if (!groups.length) {
+    const li = document.createElement("li");
+    li.innerHTML = '<p class="empty">No match in the town listing. Try a shorter piece of the name, or check the street spelling on your sheet.</p>';
+    ul.appendChild(li);
+    return;
+  }
+  for (const g of groups) {
+    for (const e of g.items) {
+      const li = document.createElement("li");
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "pick";
+      const left = document.createElement("span");
+      left.innerHTML = '<span class="name">' + esc(e.base) + '</span>' +
+        (e.seg ? '<span class="seg">' + esc(e.seg) + '</span>' : '');
+      const right = document.createElement("span");
+      right.className = "when";
+      right.innerHTML = '<span class="swatch ' + e.week.toLowerCase() + '"></span>' +
+        e.week + " week &middot; " + e.day;
+      b.append(left, right);
+      b.addEventListener("click", () => choose(e.id));
+      li.appendChild(b);
+      ul.appendChild(li);
+    }
+  }
+}
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function choose(id){
+  chosen = ENTRIES.find(e => e.id === id) || null;
+  if (!chosen) return;
+  save(id);
+  renderMain();
+}
+
+/* ---------- main view ---------- */
+function renderMain(){
+  $("setup").classList.add("hidden");
+  $("main").classList.remove("hidden");
+
+  const today = new Date();
+  const e = chosen;
+  const dayIdx = DAYS.indexOf(e.day);
+  const next = upcoming(e.week, dayIdx, today, 5);
+  const myWeekNow = weekLetter(today) === e.week;
+  const p = next[0];
+
+  // headline
+  const lede = $("lede"), detail = $("detail");
+  let head, body = "";
+  if (p && sameDay(p.date, today)) {
+    head = "Today's the day.";
+    body = "Recycling goes out on " + e.day + "s in " + e.week + " weeks, and this is one.";
+  } else if (p && dayNum(p.date) === dayNum(today) + 1) {
+    head = "Put it out tonight.";
+    body = "Collection is tomorrow, <b>" + fmt(p.date) + "</b>.";
+  } else if (myWeekNow && p && dayNum(p.date) <= dayNum(addDays(weekStart(today), 6))) {
+    head = "It's your week.";
+    body = "Collection is <b>" + fmt(p.date) + "</b>.";
+  } else if (myWeekNow) {
+    head = "Your week, already collected.";
+    body = "This is an " + e.week + " week, but " + e.day + " has passed. Next up is <b>" + (p ? fmt(p.date) : "\u2014") + "</b>.";
+  } else {
+    head = "Not this week.";
+    body = "This is " + weekLetter(today) + " week; you're on " + e.week + ". Next collection is <b>" + (p ? fmt(p.date) : "\u2014") + "</b>.";
+  }
+  if (p && p.shifted) body += " " + p.shifted + " pushes the route back a day.";
+  if (p && p.bulk) body += " Bulk items go out the same day.";
+  lede.textContent = head;
+  lede.className = "lede" + (myWeekNow ? "" : " no");
+  detail.innerHTML = body;
+
+  // identity line
+  $("whoStreet").textContent = e.base + (e.seg ? " \u2014 " + e.seg : "");
+  $("whoWeek").innerHTML = '<span class="swatch ' + e.week.toLowerCase() + '"></span>' +
+    e.week + " week, " + e.day + "s";
+
+  // next pickups
+  const ul = $("dates"); ul.innerHTML = "";
+  for (const item of next) {
+    const li = document.createElement("li");
+    const tags = [];
+    if (item.bulk) tags.push('<span class="badge bulk">Bulk</span>');
+    if (item.shifted) tags.push('<span class="badge shift">+1 day</span>');
+    li.innerHTML =
+      '<span class="dow">' + DOW[item.date.getDay()].slice(0,3) + '</span>' +
+      '<span class="date">' + MON[item.date.getMonth()] + " " + item.date.getDate() +
+        ", " + item.date.getFullYear() + '</span>' +
+      '<span class="tags">' + tags.join("") + '</span>';
+    ul.appendChild(li);
+  }
+
+  // ribbon
+  const rib = $("ribbon"); rib.innerHTML = "";
+  let ws = weekStart(today);
+  for (let i = 0; i < 10; i++, ws = addDays(ws, 7)) {
+    const L = weekLetter(ws);
+    const mine = L === e.week;
+    const div = document.createElement("div");
+    div.className = "wk " + L.toLowerCase() + (mine ? " mine" : "") + (i === 0 ? " now" : "");
+    div.innerHTML = '<div class="bar">' + L + '</div>' +
+      '<span class="of">' + (i === 0 ? "now" : MON[ws.getMonth()] + " " + ws.getDate()) + '</span>';
+    rib.appendChild(div);
+  }
+  $("ribbonKey").textContent =
+    "Outlined blocks are your weeks. " + e.week + " weeks run " + e.day + "s.";
+
+  $("foot2").textContent =
+    "Bulk items go out on your normal collection day during the weeks of " +
+    bulkMondays(today.getFullYear()).map(d => MON[d.getMonth()] + " " + d.getDate()).join(", ") +
+    ". A holiday pushes collection one day later for the rest of that week.";
+
+  $("foot1").textContent =
+    "Your sheet leaves January through March 21, 2026 uncolored; those weeks are filled in here by continuing the same two-week alternation backwards.";
+}
+
+/* ---------- share link ---------- */
+function shareUrl(e){
+  const u = new URL(location.href);
+  u.hash = "";
+  u.searchParams.set("s", e.id);
+  return u.toString();
+}
+function readShared(){
+  try {
+    const raw = new URLSearchParams(location.search).get("s");
+    if (!raw) return null;
+    return ENTRIES.find(e => e.id === raw) || null;
+  } catch(err){ return null; }
+}
+function note(msg){
+  const n = $("actNote");
+  n.textContent = msg;
+  n.classList.remove("hidden");
+}
+
+/* ---------- calendar export ---------- */
+function pad(n){ return String(n).padStart(2,"0"); }
+function icsDate(d){ return d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()); }
+
+function buildIcs(e){
+  const from = new Date();
+  const list = upcoming(e.week, DAYS.indexOf(e.day), from, 26);
+  const stamp = new Date().toISOString().replace(/[-:]/g,"").split(".")[0] + "Z";
+  const L = [
+    "BEGIN:VCALENDAR","VERSION:2.0",
+    "PRODID:-//Hamburg Recycling Week//EN",
+    "CALSCALE:GREGORIAN","METHOD:PUBLISH",
+    "X-WR-CALNAME:Recycling - " + e.base
+  ];
+  list.forEach((p, i) => {
+    const title = p.bulk ? "Recycling + bulk out" : "Recycling out";
+    const desc = e.base + (e.seg ? " (" + e.seg + ")" : "") +
+      " - " + e.week + " week, " + e.day + "s." +
+      (p.shifted ? " Delayed one day for " + p.shifted + "." : "") +
+      (p.bulk ? " Bulk items go out this week." : "");
+    L.push(
+      "BEGIN:VEVENT",
+      "UID:" + icsDate(p.date) + "-" + i + "-hamburgrecycling@local",
+      "DTSTAMP:" + stamp,
+      "DTSTART;VALUE=DATE:" + icsDate(p.date),
+      "DTEND;VALUE=DATE:" + icsDate(addDays(p.date,1)),
+      "SUMMARY:" + title,
+      "DESCRIPTION:" + desc,
+      "BEGIN:VALARM","TRIGGER:-PT5H","ACTION:DISPLAY",
+      "DESCRIPTION:Put the recycling out","END:VALARM",
+      "END:VEVENT"
+    );
+  });
+  L.push("END:VCALENDAR");
+  return L.join("\r\n");
+}
+
+function downloadIcs(e){
+  const blob = new Blob([buildIcs(e)], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "hamburg-recycling-" + e.base.toLowerCase().replace(/[^a-z0-9]+/g,"-") + ".ics";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+/* ---------- wiring ---------- */
+$("q").addEventListener("input", renderResults);
+
+$("shareBtn").addEventListener("click", async () => {
+  if (!chosen) return;
+  const url = shareUrl(chosen);
+  const btn = $("shareBtn");
+  try {
+    await navigator.clipboard.writeText(url);
+    btn.textContent = "Link copied";
+    btn.dataset.done = "1";
+    note("Opens straight to " + chosen.base + ", no searching needed.");
+    setTimeout(() => { btn.textContent = "Copy link for a neighbor"; delete btn.dataset.done; }, 4000);
+  } catch(err){
+    note(url);
+  }
+});
+
+$("icsBtn").addEventListener("click", () => {
+  if (!chosen) return;
+  const btn = $("icsBtn");
+  try {
+    downloadIcs(chosen);
+    btn.textContent = "Calendar file saved";
+    btn.dataset.done = "1";
+    note("A year of pickups, each with a reminder the evening before. Open the file to add them.");
+    setTimeout(() => { btn.textContent = "Add to my calendar"; delete btn.dataset.done; }, 5000);
+  } catch(err){
+    note("This browser blocked the download. Try opening the page in its own tab.");
+  }
+});
+$("change").addEventListener("click", () => {
+  $("main").classList.add("hidden");
+  $("setup").classList.remove("hidden");
+  $("actNote").classList.add("hidden");
+  $("q").value = "";
+  renderResults();
+  $("q").focus();
+});
+
+(function init(){
+  const now = new Date();
+  $("today").textContent = fmt(now, true);
+  const shared = readShared();
+  const saved = load();
+  if (shared) {
+    chosen = shared;
+    save(shared.id);
+    renderMain();
+  } else if (saved && ENTRIES.some(e => e.id === saved)) {
+    chosen = ENTRIES.find(e => e.id === saved);
+    renderMain();
+  } else {
+    renderResults();
+  }
+})();
+</script>
+</body>
+</html>
