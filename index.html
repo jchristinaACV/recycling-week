@@ -123,6 +123,7 @@ input[type=search]:focus-visible{outline:2.5px solid var(--navy);outline-offset:
   display:inline-block;font-size:.78rem;font-weight:600;
   padding:.2rem .5rem;border-radius:.25rem;margin-right:.4rem;vertical-align:.1rem;
 }
+.badge.trash{background:var(--cell);color:var(--ink-soft)}
 .badge.bulk{background:var(--bulk);color:#2A2306}
 .badge.rec{background:var(--navy);color:var(--paper)}
 .badge.shift{background:var(--holiday);color:#fff}
@@ -505,10 +506,10 @@ function renderMain(){
     const li = document.createElement("li");
     if (!item.recycling) li.className = "off";
     const tags = [];
+    tags.push('<span class="badge trash">Trash</span>');
     if (item.recycling) tags.push('<span class="badge rec">Recycling</span>');
     if (item.bulk) tags.push('<span class="badge bulk">Bulk</span>');
     if (item.shifted) tags.push('<span class="badge shift">+1 day</span>');
-    tags.push('<span class="muted">trash only</span>');
     li.innerHTML =
       '<span class="dow">' + DOW[item.date.getDay()].slice(0,3) + '</span>' +
       '<span class="date">' + MON[item.date.getMonth()] + " " + item.date.getDate() +
