@@ -124,6 +124,7 @@ input[type=search]:focus-visible{outline:2.5px solid var(--navy);outline-offset:
   padding:.2rem .5rem;border-radius:.25rem;margin-right:.4rem;vertical-align:.1rem;
 }
 .badge.bulk{background:var(--bulk);color:#2A2306}
+.badge.rec{background:var(--navy);color:var(--paper)}
 .badge.shift{background:var(--holiday);color:#fff}
 
 /* street identity line */
@@ -154,7 +155,8 @@ section{margin-bottom:2rem}
 .dates .dow{width:3.1rem;flex:none;font-weight:600}
 .dates .date{flex:1}
 .dates .tags{text-align:right;font-size:.8rem;color:var(--ink-soft)}
-.dates li:first-child .dow,.dates li:first-child .date{color:var(--ink)}
+.dates li.off .dow,.dates li.off .date{color:var(--ink-faint);font-weight:400}
+.dates .muted{color:var(--ink-faint)}
 .dates li:first-child{border-bottom:1.5px solid var(--ink)}
 
 /* A/B ribbon — echoes the printed calendar blocks */
@@ -226,7 +228,7 @@ footer p{margin:0 0 .4rem}
     </div>
 
     <section>
-      <h2>Next pickups</h2>
+      <h2>Upcoming collection</h2>
       <ul class="dates" id="dates"></ul>
     </section>
 
@@ -320,6 +322,26 @@ function pickup(ws, dayIdx){
     shifted = h.name;
   }
   return { date, shifted, bulk: isBulkWeek(ws) };
+}
+
+/* Every upcoming week, not just recycling weeks. Bulk collection and
+   holiday delays apply to a street's collection day regardless of whether
+   recycling goes out that week, so they have to be surfaced here too. */
+function weekRows(letter, dayIdx, from, count){
+  const out = [];
+  let ws = weekStart(from);
+  for (let i = 0; out.length < count && i < 120; i++, ws = addDays(ws, 7)) {
+    const p = pickup(ws, dayIdx);
+    if (dayNum(p.date) < dayNum(from)) continue;
+    out.push({
+      date: p.date,
+      shifted: p.shifted,
+      bulk: p.bulk,
+      recycling: weekLetter(ws) === letter,
+      letter: weekLetter(ws)
+    });
+  }
+  return out;
 }
 
 function upcoming(letter, dayIdx, from, count){
@@ -456,6 +478,16 @@ function renderMain(){
   }
   if (p && p.shifted) body += " " + p.shifted + " pushes the route back a day.";
   if (p && p.bulk) body += " Bulk items go out the same day.";
+
+  // Bulk and holiday delays apply in off weeks too, so call them out there.
+  const thisWeek = weekRows(e.week, dayIdx, today, 1)[0];
+  if (thisWeek && !thisWeek.recycling) {
+    if (thisWeek.bulk) {
+      body += " Bulk items still go out <b>" + fmt(thisWeek.date) + "</b> \u2014 bulk runs on its own schedule.";
+    } else if (thisWeek.shifted) {
+      body += " Collection this week shifts a day later for " + thisWeek.shifted + ".";
+    }
+  }
   lede.textContent = head;
   lede.className = "lede" + (myWeekNow ? "" : " no");
   detail.innerHTML = body;
@@ -467,11 +499,14 @@ function renderMain(){
 
   // next pickups
   const ul = $("dates"); ul.innerHTML = "";
-  for (const item of next) {
+  for (const item of weekRows(e.week, dayIdx, today, 5)) {
     const li = document.createElement("li");
+    if (!item.recycling) li.className = "off";
     const tags = [];
+    if (item.recycling) tags.push('<span class="badge rec">Recycling</span>');
     if (item.bulk) tags.push('<span class="badge bulk">Bulk</span>');
     if (item.shifted) tags.push('<span class="badge shift">+1 day</span>');
+    tags.push('<span class="muted">trash only</span>');
     li.innerHTML =
       '<span class="dow">' + DOW[item.date.getDay()].slice(0,3) + '</span>' +
       '<span class="date">' + MON[item.date.getMonth()] + " " + item.date.getDate() +
@@ -530,7 +565,9 @@ function icsDate(d){ return d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDat
 
 function buildIcs(e){
   const from = new Date();
-  const list = upcoming(e.week, DAYS.indexOf(e.day), from, 26);
+  // 52 weeks covers a year; keep recycling weeks plus any bulk week.
+  const list = weekRows(e.week, DAYS.indexOf(e.day), from, 52)
+    .filter(p => p.recycling || p.bulk);
   const stamp = new Date().toISOString().replace(/[-:]/g,"").split(".")[0] + "Z";
   const L = [
     "BEGIN:VCALENDAR","VERSION:2.0",
@@ -539,9 +576,12 @@ function buildIcs(e){
     "X-WR-CALNAME:Recycling - " + e.base
   ];
   list.forEach((p, i) => {
-    const title = p.bulk ? "Recycling + bulk out" : "Recycling out";
+    const title = p.recycling
+      ? (p.bulk ? "Recycling + bulk out" : "Recycling out")
+      : "Bulk out";
     const desc = e.base + (e.seg ? " (" + e.seg + ")" : "") +
       " - " + e.week + " week, " + e.day + "s." +
+      (p.recycling ? "" : " Not a recycling week; bulk only.") +
       (p.shifted ? " Delayed one day for " + p.shifted + "." : "") +
       (p.bulk ? " Bulk items go out this week." : "");
     L.push(
